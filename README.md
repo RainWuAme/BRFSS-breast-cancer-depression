@@ -1,1 +1,1 @@
-# CDC_BRFSS_breast_cancer_and_depression
+This notebook analyzes CDC BRFSS 2023 data to examine the relationship between various factors and depression among breast cancer patients using logistic regression.
