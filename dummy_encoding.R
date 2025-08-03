@@ -102,6 +102,12 @@ breast_cancer_data <- brfss_data_cleaned %>%
 breast_cancer_data <- breast_cancer_data %>%
     select(-cancer)
 
+# Save the original data
+write_csv(breast_cancer_data, "./data/breast_cancer_data.csv")
+
+# ---------------------------
+# Encoding and cleaning steps
+# ---------------------------
 # # Change depression 1, 2, to 0, 1
 # breast_cancer_data <- breast_cancer_data %>%
 #     mutate(depression = ifelse(depression == 1, 0, ifelse(depression == 2, 1, NA)))
@@ -225,3 +231,114 @@ breast_cancer_data <- breast_cancer_data %>%
 # Remove the original frequency column and the numeric conversion
 breast_cancer_data <- breast_cancer_data %>%
     select(-physical_activity_frequency_1, -physical_activity_frequency_1_num)
+
+# Set physical_activity_type_2 77 and 99 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(physical_activity_type_2 = ifelse(physical_activity_type_2 %in% c(77, 99), NA, physical_activity_type_2))
+# Dummy variables for physical activity type 2 from number 1 to 11 and 88
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(
+        physical_activity_type_2_2 = ifelse(physical_activity_type_2 == "02", 1, 0),
+        physical_activity_type_2_3 = ifelse(physical_activity_type_2 == "03", 1, 0),
+        physical_activity_type_2_4 = ifelse(physical_activity_type_2 == "04", 1, 0),
+        physical_activity_type_2_5 = ifelse(physical_activity_type_2 == "05", 1, 0),
+        physical_activity_type_2_6 = ifelse(physical_activity_type_2 == "06", 1, 0),
+        physical_activity_type_2_7 = ifelse(physical_activity_type_2 == "07", 1, 0),
+        physical_activity_type_2_8 = ifelse(physical_activity_type_2 == "08", 1, 0),
+        physical_activity_type_2_9 = ifelse(physical_activity_type_2 == "09", 1, 0),
+        physical_activity_type_2_10 = ifelse(physical_activity_type_2 == "10", 1, 0),
+        physical_activity_type_2_11 = ifelse(physical_activity_type_2 == "11", 1, 0),
+        physical_activity_type_2_88 = ifelse(physical_activity_type_2 == "88", 1, 0)
+    )
+# Remove the 'physical_activity_type_2' column as it is not needed for further analysis
+breast_cancer_data <- breast_cancer_data %>%
+    select(-physical_activity_type_2)
+
+# Set physical_activity_frequency_2 777 and 999 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(physical_activity_frequency_2 = ifelse(physical_activity_frequency_2 %in% c("777", "999"), NA, physical_activity_frequency_2))
+# Convert exercise frequency to monthly frequency
+# Original coding: 101-199 (times per week), 201-299 (times per month)
+# Target: all converted to times per month
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(
+        # Convert string to numeric first
+        physical_activity_frequency_2_num = as.numeric(physical_activity_frequency_2),
+
+        # Convert to monthly frequency
+        physical_activity_frequency_2_monthly = case_when(
+            # Weekly frequency (101-199): subtract 100, then multiply by 4
+            physical_activity_frequency_2_num >= 101 & physical_activity_frequency_2_num <= 199 ~
+                (physical_activity_frequency_2_num - 100) * 4,
+
+            # Monthly frequency (201-299): subtract 200 to get actual monthly frequency
+            physical_activity_frequency_2_num >= 201 & physical_activity_frequency_2_num <= 299 ~
+                physical_activity_frequency_2_num - 200,
+        )
+    )
+# Remove the original frequency column and the numeric conversion
+breast_cancer_data <- breast_cancer_data %>%
+    select(-physical_activity_frequency_2, -physical_activity_frequency_2_num)
+
+# Set anaerobic_exercise_time 777 and 999 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(anaerobic_exercise_time = ifelse(anaerobic_exercise_time %in% c("777", "999"), NA, anaerobic_exercise_time))
+# Set anaerobic_exercise_time 888 to 0
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(anaerobic_exercise_time = ifelse(anaerobic_exercise_time == "888", 0, anaerobic_exercise_time))
+# Convert anaerobic_exercise_time to monthly frequency
+# Original coding: 101-199 (times per week), 201-299 (times per month)
+# Target: all converted to times per month
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(
+        # Convert string to numeric first
+        anaerobic_exercise_time_num = as.numeric(anaerobic_exercise_time),
+
+        # Convert to monthly frequency
+        anaerobic_exercise_time_monthly = case_when(
+            # Weekly frequency (101-199): subtract 100, then multiply by 4
+            anaerobic_exercise_time_num >= 101 & anaerobic_exercise_time_num <= 199 ~
+                (anaerobic_exercise_time_num - 100) * 4,
+
+            # Monthly frequency (201-299): subtract 200 to get actual monthly frequency
+            anaerobic_exercise_time_num >= 201 & anaerobic_exercise_time_num <= 299 ~
+                anaerobic_exercise_time_num - 200,
+        )
+    )
+# Remove the original frequency column and the numeric conversion
+breast_cancer_data <- breast_cancer_data %>%
+    select(-anaerobic_exercise_time, -anaerobic_exercise_time_num)
+
+
+# Set hypertension 7 and 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(hypertension = ifelse(hypertension %in% c(7, 9), NA, hypertension))
+
+# Set dyslipidemia 7 and 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(dyslipidemia = ifelse(dyslipidemia %in% c(7, 9), NA, dyslipidemia))
+
+# Set heart_attack 7 and 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(heart_attack = ifelse(heart_attack %in% c(7, 9), NA, heart_attack))
+
+# Set Coronary_heart_disease 7 and 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(Coronary_heart_disease = ifelse(Coronary_heart_disease %in% c(7, 9), NA, Coronary_heart_disease))
+
+# Set diabetes 7 and 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(diabetes = ifelse(diabetes %in% c(7, 9), NA, diabetes))
+# Dummy variables for diabetes 1 to 4
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(
+        diabetes_2 = ifelse(diabetes == 2, 1, 0),
+        diabetes_3 = ifelse(diabetes == 3, 1, 0),
+        diabetes_4 = ifelse(diabetes == 4, 1, 0)
+    )
+# Remove the 'diabetes' column as it is not needed for further analysis
+breast_cancer_data <- breast_cancer_data %>%
+    select(-diabetes)
+
+# Save the cleaned data
+write_csv(breast_cancer_data, "./data/breast_cancer_data_encoded.csv")
