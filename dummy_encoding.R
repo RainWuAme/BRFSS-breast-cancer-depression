@@ -27,8 +27,10 @@ brfss_positions <- list(
     c(113, 113), # Exercise in Past 30 Days
     c(114, 115), # Type of Physical Activity 1
     c(116, 118), # Physical Activity Frequency 1
+    c(119, 121), # Exercise duration each time1
     c(122, 123), # Type of Physical Activity 2
     c(124, 126), # Physical Activity Frequency 2
+    c(127, 129), # Exercise duration each time2
     c(130, 132), # Anaerobic exercise time
     c(134, 134), # Hypertension
     c(137, 137), # Dyslipidemia
@@ -53,8 +55,10 @@ column_names <- c(
     "exercise_past_30_days",
     "physical_activity_type_1",
     "physical_activity_frequency_1",
+    "exercise_duration_each_time_1",
     "physical_activity_type_2",
     "physical_activity_frequency_2",
+    "exercise_duration_each_time_2",
     "anaerobic_exercise_time",
     "hypertension",
     "dyslipidemia",
@@ -108,9 +112,12 @@ write_csv(breast_cancer_data, "./data/breast_cancer_data.csv")
 # ---------------------------
 # Encoding and cleaning steps
 # ---------------------------
-# # Change depression 1, 2, to 0, 1
-# breast_cancer_data <- breast_cancer_data %>%
-#     mutate(depression = ifelse(depression == 1, 0, ifelse(depression == 2, 1, NA)))
+# Change depression 2 to 0
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(depression = ifelse(depression == 2, 0, depression))
+# Set depression 7, 9 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(depression = ifelse(depression %in% c(7, 9), NA, depression))
 
 # # Remove the rows with NA in depression
 # breast_cancer_data <- breast_cancer_data %>%
@@ -181,6 +188,10 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     mutate(ever_smoking = ifelse(ever_smoking %in% c(7, 9), NA, ever_smoking))
 
+
+
+#### Exercise and Physical Activity ####
+
 # Set exercise_past_30_days 7 and 9 to NA
 breast_cancer_data <- breast_cancer_data %>%
     mutate(exercise_past_30_days = ifelse(exercise_past_30_days %in% c(7, 9), NA, exercise_past_30_days))
@@ -232,6 +243,10 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     select(-physical_activity_frequency_1, -physical_activity_frequency_1_num)
 
+# Set exercise_duration_each_time_1 777 and 999 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(exercise_duration_each_time_1 = ifelse(exercise_duration_each_time_1 %in% c("777", "999"), NA, exercise_duration_each_time_1))
+
 # Set physical_activity_type_2 77 and 99 to NA
 breast_cancer_data <- breast_cancer_data %>%
     mutate(physical_activity_type_2 = ifelse(physical_activity_type_2 %in% c(77, 99), NA, physical_activity_type_2))
@@ -280,6 +295,10 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     select(-physical_activity_frequency_2, -physical_activity_frequency_2_num)
 
+# Set exercise_duration_each_time_2 777 and 999 to NA
+breast_cancer_data <- breast_cancer_data %>%
+    mutate(exercise_duration_each_time_2 = ifelse(exercise_duration_each_time_2 %in% c("777", "999"), NA, exercise_duration_each_time_2))
+
 # Set anaerobic_exercise_time 777 and 999 to NA
 breast_cancer_data <- breast_cancer_data %>%
     mutate(anaerobic_exercise_time = ifelse(anaerobic_exercise_time %in% c("777", "999"), NA, anaerobic_exercise_time))
@@ -310,6 +329,9 @@ breast_cancer_data <- breast_cancer_data %>%
     select(-anaerobic_exercise_time, -anaerobic_exercise_time_num)
 
 
+
+#### Health Conditions ####
+
 # Set hypertension 7 and 9 to NA
 breast_cancer_data <- breast_cancer_data %>%
     mutate(hypertension = ifelse(hypertension %in% c(7, 9), NA, hypertension))
@@ -330,11 +352,15 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     mutate(diabetes = ifelse(diabetes %in% c(7, 9), NA, diabetes))
 # Dummy variables for diabetes 1 to 4
+# breast_cancer_data <- breast_cancer_data %>%
+#     mutate(
+#         diabetes_2 = ifelse(diabetes == 2, 1, 0),
+#         diabetes_3 = ifelse(diabetes == 3, 1, 0),
+#         diabetes_4 = ifelse(diabetes == 4, 1, 0)
+#     )
 breast_cancer_data <- breast_cancer_data %>%
     mutate(
-        diabetes_2 = ifelse(diabetes == 2, 1, 0),
-        diabetes_3 = ifelse(diabetes == 3, 1, 0),
-        diabetes_4 = ifelse(diabetes == 4, 1, 0)
+        diabetes_234 = ifelse(diabetes %in% c(2, 3, 4), 1, 0)
     )
 # Remove the 'diabetes' column as it is not needed for further analysis
 breast_cancer_data <- breast_cancer_data %>%
