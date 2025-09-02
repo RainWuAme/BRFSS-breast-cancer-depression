@@ -6,6 +6,9 @@ data_path <- "./data/breast_cancer_data_encoded.csv"
 # Load data
 breast_cancer_data <- read_csv(data_path)
 
+# Convert all numeric columns to numeric (float) type
+breast_cancer_data <- breast_cancer_data %>%
+  mutate_if(is.character, as.numeric)
 
 # # Remove variables with >50% missing data
 # missing_prop <- sapply(your_data, function(x) sum(is.na(x))/length(x))
@@ -92,3 +95,6 @@ results_summary <- summary(pooled_results)
 #     axis.text = element_text(size = 11),
 #     legend.position = "bottom"
 #   )
+
+# completed_data1 <- complete(imputed_data, 1)
+head(results_summary)

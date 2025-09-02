@@ -4,6 +4,7 @@ library(readr)
 library(VIM) # 用於 KNN 填補
 library(pscl) # 用於 Pseudo R-squared (McFadden)
 library(caTools) # 用於資料分割
+library(stringr)
 
 cat("--- 開始偵錯程序 ---\n\n")
 
@@ -169,16 +170,8 @@ breast_cancer_data <- breast_cancer_data %>%
 # Dummy variables for health insurance 1 ~ 10 and 88
 breast_cancer_data <- breast_cancer_data %>%
     mutate(
-        health_insurance_2 = ifelse(health_insurance == 2, 1, 0),
-        health_insurance_3 = ifelse(health_insurance == 3, 1, 0),
-        health_insurance_4 = ifelse(health_insurance == 4, 1, 0),
-        health_insurance_5 = ifelse(health_insurance == 5, 1, 0),
-        health_insurance_6 = ifelse(health_insurance == 6, 1, 0),
-        health_insurance_7 = ifelse(health_insurance == 7, 1, 0),
-        health_insurance_8 = ifelse(health_insurance == 8, 1, 0),
-        health_insurance_9 = ifelse(health_insurance == 9, 1, 0),
-        health_insurance_10 = ifelse(health_insurance == 10, 1, 0),
-        health_insurance_88 = ifelse(health_insurance == 88, 1, 0)
+        health_insurance_y = ifelse(health_insurance %in% c(1:10), 1, 0),
+        health_insurance_n = ifelse(health_insurance == 88, 1, 0)
     )
 # Remove the 'health_insurance' column as it is not needed for further analysis
 breast_cancer_data <- breast_cancer_data %>%
@@ -202,6 +195,7 @@ breast_cancer_data <- breast_cancer_data %>%
 # Dummy variables for physical activity type 1 from number 1 to 11
 breast_cancer_data <- breast_cancer_data %>%
     mutate(
+        physical_activity_type_1_1 = ifelse(physical_activity_type_1 == "01", 1, 0),
         physical_activity_type_1_2 = ifelse(physical_activity_type_1 == "02", 1, 0),
         physical_activity_type_1_3 = ifelse(physical_activity_type_1 == "03", 1, 0),
         physical_activity_type_1_4 = ifelse(physical_activity_type_1 == "04", 1, 0),
@@ -243,16 +237,48 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     select(-physical_activity_frequency_1, -physical_activity_frequency_1_num)
 
-# Set exercise_duration_each_time_1 777 and 999 to NA
+
+# Calculate exercise times(mins/months)
 breast_cancer_data <- breast_cancer_data %>%
-    mutate(exercise_duration_each_time_1 = ifelse(exercise_duration_each_time_1 %in% c("777", "999"), NA, exercise_duration_each_time_1))
+  mutate(
+    # 先將原始欄位處理為乾淨的數值或 NA
+    exercise_time = case_when(
+      # 特殊代碼處理
+      as.character(exercise_duration_each_time_1) %in% c("777", "999") ~ NA_real_,
+      as.character(exercise_duration_each_time_1) == "888" ~ 0,
+      # 其他數值轉換
+      TRUE ~ as.numeric(exercise_duration_each_time_1)
+    ),
+    
+    # 接著，利用乾淨的 exercise_time 欄位進行轉換
+    total_minutes_each_1 = case_when(
+      # 如果值是 0 到 99 之間，代表只有分鐘數
+      exercise_time <= 99 ~ exercise_time,
+      
+      # 如果值大於 99，代表有小時和分鐘
+      exercise_time > 99 ~ 
+        # 這裡改用原始字串來拆解，才能正確提取小時和分鐘
+        as.numeric(str_sub(as.character(exercise_duration_each_time_1), 1, -3)) * 60 + 
+        as.numeric(str_sub(as.character(exercise_duration_each_time_1), -2, -1)),
+      
+      # 處理 NA 值
+      TRUE ~ NA_real_
+    )
+  )%>%
+
+    # 建立一個新的欄位來儲存每月總分鐘數
+    mutate(total_minutes_month_1 = (physical_activity_frequency_1_monthly) * (total_minutes_each_1))
+
 
 # Set physical_activity_type_2 77 and 99 to NA
 breast_cancer_data <- breast_cancer_data %>%
     mutate(physical_activity_type_2 = ifelse(physical_activity_type_2 %in% c(77, 99), NA, physical_activity_type_2))
+
+
 # Dummy variables for physical activity type 2 from number 1 to 11 and 88
 breast_cancer_data <- breast_cancer_data %>%
     mutate(
+        physical_activity_type_2_1 = ifelse(physical_activity_type_2 == "01", 1, 0),
         physical_activity_type_2_2 = ifelse(physical_activity_type_2 == "02", 1, 0),
         physical_activity_type_2_3 = ifelse(physical_activity_type_2 == "03", 1, 0),
         physical_activity_type_2_4 = ifelse(physical_activity_type_2 == "04", 1, 0),
@@ -295,9 +321,36 @@ breast_cancer_data <- breast_cancer_data %>%
 breast_cancer_data <- breast_cancer_data %>%
     select(-physical_activity_frequency_2, -physical_activity_frequency_2_num)
 
-# Set exercise_duration_each_time_2 777 and 999 to NA
+# Calculate exercise times 2(mins/months)
 breast_cancer_data <- breast_cancer_data %>%
-    mutate(exercise_duration_each_time_2 = ifelse(exercise_duration_each_time_2 %in% c("777", "999"), NA, exercise_duration_each_time_2))
+  mutate(
+    # 先將原始欄位處理為乾淨的數值或 NA
+    exercise_time2 = case_when(
+      # 特殊代碼處理
+      as.character(exercise_duration_each_time_2) %in% c("777", "999") ~ NA_real_,
+      as.character(exercise_duration_each_time_2) == "888" ~ 0,
+      # 其他數值轉換
+      TRUE ~ as.numeric(exercise_duration_each_time_2)
+    ),
+    
+    # 接著，利用乾淨的 exercise_time 欄位進行轉換
+    total_minutes_each_2 = case_when(
+      # 如果值是 0 到 99 之間，代表只有分鐘數
+      exercise_time2 <= 99 ~ exercise_time,
+      
+      # 如果值大於 99，代表有小時和分鐘
+      exercise_time2 > 99 ~ 
+        # 這裡改用原始字串來拆解，才能正確提取小時和分鐘
+        as.numeric(str_sub(as.character(exercise_duration_each_time_2), 1, -3)) * 60 + 
+        as.numeric(str_sub(as.character(exercise_duration_each_time_2), -2, -1)),
+      
+      # 處理 NA 值
+      TRUE ~ NA_real_
+    )
+  )%>%
+  
+  # 建立一個新的欄位來儲存每月總分鐘數
+  mutate(total_minutes_month_2 = (physical_activity_frequency_2_monthly) * (total_minutes_each_2))
 
 # Set anaerobic_exercise_time 777 and 999 to NA
 breast_cancer_data <- breast_cancer_data %>%
